@@ -15,15 +15,15 @@
         #game-canvas {
             cursor: none;
             background: #ffffff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-radius: 16px;
             display: block;
             max-width: 100%;
             max-height: 100%;
         }
         .control-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
         }
         input[type=range] {
             height: 8px;
@@ -32,51 +32,54 @@
             outline: none;
         }
         .history-list::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
         .history-list::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
-        .mode-active {
-            border: 2px solid #3B82F6;
-            background-color: #EFF6FF;
+        .custom-modal-backdrop {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="flex flex-col h-screen select-none">
 
     <!-- 頂部資訊欄 -->
-    <header id="game-header" class="p-4 flex justify-between items-center bg-white shadow-sm z-10">
-        <div class="flex items-center gap-4">
+    <header id="game-header" class="p-3 md:p-4 flex justify-between items-center bg-white shadow-sm z-10 border-b border-gray-100">
+        <div class="flex items-center gap-3 md:gap-5">
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-blue-600">左右平衡訓練</h1>
+                <h1 class="text-lg md:text-2xl font-black text-blue-600 flex items-center gap-2">
+                    <span class="inline-block w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+                    左右平衡復健訓練
+                </h1>
                 <p id="mode-indicator" class="text-gray-400 text-[10px] md:text-xs">目前模式：碼表計時</p>
             </div>
-            <!-- 目標進度顯示 (僅在有目標時顯示) -->
-            <div id="target-progress-ui" class="hidden flex-col px-4 py-1 bg-blue-600 rounded-lg text-white">
-                <span class="text-[10px] font-bold opacity-80">訓練進度</span>
-                <span id="progress-text" class="text-sm font-bold font-mono">0 / 0</span>
+            <!-- 目標進度顯示 -->
+            <div id="target-progress-ui" class="hidden flex flex-col px-3 md:px-4 py-1 bg-blue-600 rounded-xl text-white shadow-sm">
+                <span class="text-[9px] md:text-[10px] font-bold opacity-80 uppercase tracking-wide">訓練進度</span>
+                <span id="progress-text" class="text-xs md:text-sm font-bold font-mono">0 / 0</span>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4">
-            <div class="flex flex-col items-center px-4 py-1 bg-blue-50 rounded-lg border border-blue-100">
-                <span class="text-[10px] text-blue-400 font-bold">已訓練時間</span>
-                <span id="timer-display" class="text-lg md:text-xl font-mono font-bold text-blue-700">00:00</span>
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="flex flex-col items-center px-3 py-1 bg-blue-50 rounded-xl border border-blue-100">
+                <span class="text-[9px] md:text-[10px] text-blue-400 font-bold">訓練時間</span>
+                <span id="timer-display" class="text-base md:text-xl font-mono font-bold text-blue-700">00:00</span>
             </div>
 
-            <div class="flex gap-2 md:gap-4 text-sm md:text-xl mr-2">
-                <div class="font-semibold text-green-600 px-2 md:px-3 py-1 bg-green-50 rounded-lg">成功: <span id="score-display">0</span></div>
-                <div class="font-semibold text-red-500 px-2 md:px-3 py-1 bg-red-50 rounded-lg">漏掉: <span id="miss-display">0</span></div>
+            <div class="flex gap-2 text-xs md:text-base">
+                <div class="font-bold text-emerald-600 px-2.5 py-1.5 bg-emerald-50 rounded-xl border border-emerald-100">成功: <span id="score-display">0</span></div>
+                <div class="font-bold text-rose-500 px-2.5 py-1.5 bg-rose-50 rounded-xl border border-rose-100">漏掉: <span id="miss-display">0</span></div>
             </div>
-            
-            <button id="pause-btn" class="px-3 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition">
+
+            <button id="pause-btn" class="px-3 md:px-4 py-2 bg-amber-500 text-white text-xs md:text-sm font-bold rounded-xl hover:bg-amber-600 transition shadow-sm active:scale-95">
                 暫停
             </button>
 
-            <button id="settings-btn" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button id="settings-btn" title="設定" class="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0" />
                 </svg>
@@ -89,155 +92,190 @@
         <canvas id="game-canvas"></canvas>
 
         <!-- 開始畫面 -->
-        <div id="start-overlay" class="absolute inset-0 bg-white bg-opacity-95 flex flex-col items-center justify-center z-20 p-4">
-            <div class="flex flex-col lg:flex-row gap-6 max-w-6xl w-full h-full lg:h-auto overflow-y-auto lg:overflow-visible p-2">
+        <div id="start-overlay" class="absolute inset-0 bg-slate-50/95 flex flex-col items-center justify-center z-20 p-4">
+            <div class="flex flex-col lg:flex-row gap-6 max-w-5xl w-full max-h-[92vh] overflow-hidden">
                 <!-- 左側：開始介紹 -->
-                <div class="flex-1 text-center lg:text-left p-6 md:p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
-                    <div class="mb-4 text-5xl">🎯</div>
-                    <h2 class="text-2xl md:text-3xl font-bold mb-4">訓練計畫準備</h2>
-                    <p class="text-gray-600 mb-6 text-sm md:text-lg leading-relaxed">
-                        水平移動滑鼠，盡力接住所有藍色球體。您可以在設定中切換不同的訓練模式。
-                    </p>
-                    <button id="start-btn" class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl hover:bg-blue-700 transition shadow-lg active:scale-95 mb-4">
-                        開始新訓練
-                    </button>
+                <div class="flex-1 flex flex-col justify-between p-6 md:p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
+                    <div>
+                        <div class="inline-flex p-3 rounded-2xl bg-blue-50 text-blue-600 mb-4 text-3xl">🎯</div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold mb-3 text-slate-800">上肢平衡與協調訓練</h2>
+                        <p class="text-gray-600 mb-6 text-sm md:text-base leading-relaxed">
+                            水平移動滑鼠或觸控螢幕，平穩控制收集板接住所有下落的藍色球體。訓練結束後，您可以隨時**匯出完整 Excel 報表**或**生成成效評估圖卡**，記錄您的復健進步曲線。
+                        </p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <button id="start-btn" class="w-full py-4 bg-blue-600 text-white text-lg font-bold rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 active:scale-95 flex items-center justify-center gap-2">
+                            <span>開始新訓練</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- 右側：歷史紀錄 -->
-                <div class="flex-1 p-6 md:p-8 bg-gray-50 rounded-3xl shadow-inner border border-gray-200 flex flex-col max-h-[400px] lg:max-h-[500px]">
-                    <h3 class="text-lg font-bold mb-4 text-gray-700 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        訓練歷史紀錄
-                    </h3>
-                    <div id="history-container" class="history-list overflow-y-auto space-y-3 pr-2">
-                        <p class="text-gray-400 text-center py-10">尚無紀錄</p>
+                <!-- 右側：歷史紀錄與導出專區 -->
+                <div class="flex-1 p-6 md:p-8 bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col min-h-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-gray-100">
+                        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            訓練歷史明細
+                        </h3>
+                        
+                        <!-- 導出工具列 -->
+                        <div class="flex items-center gap-2">
+                            <button id="export-excel-btn" title="下載 CSV/Excel 試算表" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg border border-emerald-200 transition flex items-center gap-1 active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                匯出 Excel
+                            </button>
+                            <button id="export-latest-card-btn" title="下載最新一筆圖卡" class="px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold rounded-lg border border-blue-200 transition flex items-center gap-1 active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                成果圖卡
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="history-container" class="history-list overflow-y-auto space-y-2.5 pr-1 flex-grow">
+                        <p class="text-gray-400 text-center py-12 text-sm">尚無紀錄，開始一次訓練吧！</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 暫停/成績詳細畫面 -->
-        <div id="pause-overlay" class="hidden absolute inset-0 bg-blue-900 bg-opacity-40 backdrop-blur-sm flex flex-col items-center justify-center z-40 p-4">
-            <div class="text-center p-6 md:p-8 bg-white rounded-3xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
-                <h2 id="pause-title" class="text-2xl font-bold mb-6 text-gray-800">訓練暫停中</h2>
+        <!-- 暫停 / 成績結算畫面 -->
+        <div id="pause-overlay" class="hidden absolute inset-0 custom-modal-backdrop flex flex-col items-center justify-center z-40 p-4">
+            <div class="text-center p-6 md:p-8 bg-white rounded-3xl shadow-2xl max-w-md w-full border border-gray-100">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-3 text-2xl">
+                    📊
+                </div>
+                <h2 id="pause-title" class="text-2xl font-black mb-4 text-slate-800">訓練暫停中</h2>
                 
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
-                        <p class="text-xs text-green-600 font-medium">成功接住</p>
-                        <p id="pause-score" class="text-2xl md:text-3xl font-bold text-green-700">0</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                        <p class="text-xs text-emerald-600 font-bold">成功接住</p>
+                        <p id="pause-score" class="text-2xl md:text-3xl font-black text-emerald-700">0</p>
                     </div>
-                    <div class="bg-red-50 p-4 rounded-2xl border border-red-100">
-                        <p class="text-xs text-red-600 font-medium">漏掉次數</p>
-                        <p id="pause-miss" class="text-2xl md:text-3xl font-bold text-red-700">0</p>
-                    </div>
-                </div>
-
-                <div class="space-y-2 mb-6 text-left">
-                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
-                        <span class="text-blue-700 text-sm font-medium">成功率</span>
-                        <span id="accuracy-rate" class="text-lg font-bold text-blue-800">100%</span>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                        <span class="text-gray-600 text-sm font-medium">訓練時長</span>
-                        <span id="training-duration" class="text-lg font-bold text-gray-800">00:00</span>
+                    <div class="bg-rose-50 p-3 rounded-2xl border border-rose-100">
+                        <p class="text-xs text-rose-600 font-bold">漏掉次數</p>
+                        <p id="pause-miss" class="text-2xl md:text-3xl font-black text-rose-600">0</p>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-3">
-                    <button id="resume-btn" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-md">
+                <div class="space-y-2 mb-5 text-left text-sm">
+                    <div class="flex justify-between items-center p-3 bg-blue-50/80 rounded-xl">
+                        <span class="text-blue-700 font-medium">成功命中率</span>
+                        <span id="accuracy-rate" class="text-lg font-black text-blue-900">100%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <span class="text-slate-600 font-medium">累積時長</span>
+                        <span id="training-duration" class="text-lg font-mono font-bold text-slate-800">00:00</span>
+                    </div>
+                </div>
+
+                <!-- 快速導出與操作按鈕 -->
+                <div class="flex flex-col gap-2.5">
+                    <button id="export-card-modal-btn" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:opacity-95 transition shadow-md flex items-center justify-center gap-2 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>匯出本次成果圖卡 (PNG)</span>
+                    </button>
+                    
+                    <button id="resume-btn" class="w-full py-2.5 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition shadow-sm active:scale-95">
                         繼續訓練
                     </button>
-                    <button id="finish-btn" class="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition shadow-md">
-                        儲存並結束這回合
+                    <button id="finish-btn" class="w-full py-2.5 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition shadow-sm active:scale-95">
+                        儲存紀錄並結束這回合
                     </button>
-                    <button id="quit-btn" class="w-full py-3 bg-white border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition">
+                    <button id="quit-btn" class="w-full py-2 bg-gray-50 border border-gray-200 text-gray-500 font-medium rounded-xl hover:bg-gray-100 transition active:scale-95 text-xs">
                         放棄並回到主選單
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- 訊息提示 Toast -->
+        <div id="toast" class="hidden absolute bottom-6 px-4 py-2 bg-slate-800/90 text-white text-xs md:text-sm font-medium rounded-xl shadow-lg z-50 backdrop-blur pointer-events-none transition-all"></div>
+
         <!-- 設定側欄 -->
-        <div id="settings-panel" class="hidden absolute right-4 top-4 bottom-4 w-72 md:w-80 p-6 rounded-2xl shadow-2xl z-50 flex flex-col control-panel border border-white">
+        <div id="settings-panel" class="hidden absolute right-4 top-4 bottom-4 w-72 md:w-80 p-6 rounded-3xl shadow-2xl z-50 flex flex-col control-panel border border-white">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">訓練計畫設定</h3>
-                <button id="close-settings" class="text-gray-400 hover:text-black text-xl">✕</button>
+                <h3 class="text-lg font-bold text-gray-800">訓練計畫設定</h3>
+                <button id="close-settings" class="text-gray-400 hover:text-black text-xl p-1">✕</button>
             </div>
 
             <div class="space-y-5 overflow-y-auto pr-2 flex-grow">
                 <!-- 模式切換 -->
-                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                    <label class="block text-sm font-bold text-gray-700 mb-3">訓練模式</label>
-                    <select id="mode-select" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="stopwatch">碼表計時 (無限制)</option>
-                        <option value="targetCount">指定接住數量模式</option>
-                        <option value="targetTime">目標時間模式</option>
+                <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                    <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">訓練模式</label>
+                    <select id="mode-select" class="w-full p-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="stopwatch">碼表計時 (自由練習)</option>
+                        <option value="targetCount">指定目標數量模式</option>
+                        <option value="targetTime">指定目標時間模式</option>
                     </select>
                 </div>
 
-                <!-- 目標數量設定 (條件顯示) -->
-                <div id="target-count-container" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-100">
+                <!-- 目標數量設定 -->
+                <div id="target-count-container" class="hidden bg-blue-50 p-3 rounded-2xl border border-blue-100">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-bold text-blue-700">目標接住數量</label>
-                        <span id="target-count-val" class="px-2 py-1 bg-blue-600 text-white text-xs font-black rounded">50 個</span>
+                        <label class="text-xs font-bold text-blue-700">目標接住數量</label>
+                        <span id="target-count-val" class="px-2 py-0.5 bg-blue-600 text-white text-xs font-black rounded-lg">50 個</span>
                     </div>
                     <input type="range" id="target-count-slider" min="10" max="200" step="10" value="50" class="w-full cursor-pointer">
                 </div>
 
-                <!-- 目標時間設定 (條件顯示) -->
-                <div id="target-time-container" class="hidden bg-amber-50 p-3 rounded-xl border border-amber-100">
+                <!-- 目標時間設定 -->
+                <div id="target-time-container" class="hidden bg-amber-50 p-3 rounded-2xl border border-amber-100">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-bold text-amber-700">目標訓練時間</label>
-                        <span id="target-time-val" class="px-2 py-1 bg-amber-600 text-white text-xs font-black rounded">5 分鐘</span>
+                        <label class="text-xs font-bold text-amber-700">目標訓練時間</label>
+                        <span id="target-time-val" class="px-2 py-0.5 bg-amber-600 text-white text-xs font-black rounded-lg">5 分鐘</span>
                     </div>
                     <input type="range" id="target-time-slider" min="1" max="30" step="1" value="5" class="w-full cursor-pointer">
                 </div>
 
                 <hr class="border-gray-100">
 
-                <!-- 基礎參數 -->
+                <!-- 難易度參數 -->
                 <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">球體下落時間</label>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-gray-500">球體下落時間</label>
                         <span id="speed-val" class="text-xs font-black text-blue-600">8.0 秒</span>
                     </div>
                     <input type="range" id="speed-slider" min="1" max="15" step="0.5" value="8" class="w-full cursor-pointer">
+                    <p class="text-[10px] text-gray-400 mt-1">秒數越長，球下落越慢，適合初階患者</p>
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">收集器寬度</label>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-gray-500">接球板寬度</label>
                         <span id="size-val" class="text-xs font-black text-blue-600">300 px</span>
                     </div>
-                    <input type="range" id="size-slider" min="40" max="500" step="10" value="300" class="w-full cursor-pointer">
+                    <input type="range" id="size-slider" min="60" max="500" step="10" value="300" class="w-full cursor-pointer">
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs font-bold text-gray-500 uppercase">生成間隔</label>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-gray-500">生成間隔頻率</label>
                         <span id="freq-val" class="text-xs font-black text-blue-600">3.0 秒</span>
                     </div>
-                    <input type="range" id="freq-slider" min="0.5" max="8" step="0.5" value="3" class="w-full cursor-pointer">
+                    <input type="range" id="freq-slider" min="1" max="8" step="0.5" value="3" class="w-full cursor-pointer">
                 </div>
 
-                <label class="flex items-center space-x-3 cursor-pointer p-2 bg-gray-50 rounded-lg">
+                <label class="flex items-center space-x-3 cursor-pointer p-2.5 bg-gray-50 rounded-xl hover:bg-gray-100">
                     <input type="checkbox" id="guide-lines" checked class="w-4 h-4 text-blue-600 rounded">
-                    <span class="text-xs font-bold text-gray-600">顯示落點引導線</span>
+                    <span class="text-xs font-bold text-gray-600">顯示落點垂直引導虛線</span>
                 </label>
             </div>
 
-            <div class="mt-4 pt-4 border-t">
-                <button id="reset-history-btn" class="w-full py-2 border border-red-200 text-red-400 text-xs font-bold rounded-lg hover:bg-red-50 transition">
+            <div class="mt-4 pt-3 border-t flex flex-col gap-2">
+                <button id="reset-history-btn" class="w-full py-2 border border-rose-200 text-rose-500 text-xs font-bold rounded-xl hover:bg-rose-50 transition">
                     清除歷史紀錄
                 </button>
             </div>
         </div>
     </main>
 
-    <footer id="game-footer" class="p-2 text-center text-gray-400 text-[10px] md:text-xs bg-white border-t">
-        系統建議：初學者建議從 300px 寬度及 8 秒下落速度開始。感到疲勞請隨時休息。
+    <footer id="game-footer" class="py-2.5 px-4 text-center text-gray-400 text-[10px] md:text-xs bg-white border-t flex items-center justify-between">
+        <span>系統建議：初學者建議從 300px 寬度及 8 秒下落速度開始。感到疲勞請隨時休息。</span>
+        <span class="font-mono text-gray-300 hidden md:inline">復健專用輔助系統 v2.0</span>
     </footer>
 
     <script>
@@ -250,7 +288,8 @@
         const modeIndicator = document.getElementById('mode-indicator');
         const progressUI = document.getElementById('target-progress-ui');
         const progressText = document.getElementById('progress-text');
-        
+        const toast = document.getElementById('toast');
+
         const startBtn = document.getElementById('start-btn');
         const startOverlay = document.getElementById('start-overlay');
         const pauseOverlay = document.getElementById('pause-overlay');
@@ -265,11 +304,15 @@
         const historyContainer = document.getElementById('history-container');
         const resetHistoryBtn = document.getElementById('reset-history-btn');
 
+        // 導出功能按鈕
+        const exportExcelBtn = document.getElementById('export-excel-btn');
+        const exportLatestCardBtn = document.getElementById('export-latest-card-btn');
+        const exportCardModalBtn = document.getElementById('export-card-modal-btn');
+
         // 設定控制項
         const modeSelect = document.getElementById('mode-select');
         const targetCountContainer = document.getElementById('target-count-container');
         const targetTimeContainer = document.getElementById('target-time-container');
-        
         const speedSlider = document.getElementById('speed-slider');
         const sizeSlider = document.getElementById('size-slider');
         const freqSlider = document.getElementById('freq-slider');
@@ -295,8 +338,14 @@
         let totalElapsedSeconds = 0;
         let sessionStartTime = 0;
 
-        // 歷史紀錄
+        // 歷史紀錄 (預設嘗試讀取 LocalStorage)
         let history = [];
+        try {
+            const saved = localStorage.getItem('stroke_rehab_history');
+            if (saved) history = JSON.parse(saved);
+        } catch(e) {
+            console.warn(e);
+        }
 
         // 遊戲參數
         let config = {
@@ -310,24 +359,40 @@
             showGuides: true
         };
 
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
         function resizeCanvas() {
             const padding = 16;
             const availableWidth = mainElement.clientWidth - (padding * 2);
             const availableHeight = mainElement.clientHeight - (padding * 2);
-            canvas.width = Math.min(availableWidth, 800);
-            canvas.height = Math.min(availableHeight, 600);
+            canvas.width = Math.min(availableWidth, 900);
+            canvas.height = Math.min(availableHeight, 620);
             updateConfig(); 
             if (!gameRunning) mouseX = canvas.width / 2;
         }
 
         window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
+        setTimeout(resizeCanvas, 80);
 
-        canvas.addEventListener('mousemove', (e) => {
+        // 支援滑鼠與觸控
+        function updatePlayerPosition(clientX) {
             if (isPaused || !gameRunning) return;
             const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-        });
+            mouseX = clientX - rect.left;
+        }
+
+        canvas.addEventListener('mousemove', (e) => updatePlayerPosition(e.clientX));
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                updatePlayerPosition(e.touches[0].clientX);
+            }
+        }, { passive: true });
 
         startBtn.addEventListener('click', () => {
             startOverlay.style.display = 'none';
@@ -340,10 +405,10 @@
         });
 
         pauseBtn.addEventListener('click', () => {
-            if (gameRunning && !isPaused) togglePause();
+            if (gameRunning && !isPaused) togglePause(false);
         });
 
-        resumeBtn.addEventListener('click', togglePause);
+        resumeBtn.addEventListener('click', () => togglePause(false));
 
         finishBtn.addEventListener('click', () => {
             saveToHistory();
@@ -351,9 +416,7 @@
         });
 
         quitBtn.addEventListener('click', () => {
-            if(confirm("確定要放棄目前進度並回到主選單嗎？")) {
-                returnToMenu();
-            }
+            returnToMenu();
         });
 
         function returnToMenu() {
@@ -364,6 +427,31 @@
             renderHistory();
         }
 
+        function getCurrentSessionSnapshot() {
+            const currentElapsed = (performance.now() - sessionStartTime) / 1000;
+            const finalSecs = Math.max(1, Math.floor(totalElapsedSeconds + currentElapsed));
+            const total = score + misses;
+            const accuracy = total === 0 ? 100 : Math.round((score / total) * 100);
+
+            let modeName = "碼表計時";
+            if (config.mode === 'targetCount') modeName = `指定數量 (${config.targetCount}球)`;
+            if (config.mode === 'targetTime') modeName = `指定時間 (${config.targetTimeMinutes}分)`;
+
+            return {
+                timestamp: new Date().toLocaleString('zh-TW', { hour12: false }),
+                mode: modeName,
+                modeType: config.mode,
+                score: score,
+                misses: misses,
+                total: total,
+                duration: formatTime(finalSecs),
+                durationSeconds: finalSecs,
+                accuracy: accuracy,
+                fallDuration: config.fallDurationSeconds,
+                paddleWidth: config.playerWidth
+            };
+        }
+
         function togglePause(isAutoFinish = false) {
             if (!gameRunning && !isAutoFinish) return;
 
@@ -372,7 +460,7 @@
                 const currentElapsed = (performance.now() - sessionStartTime) / 1000;
                 totalElapsedSeconds += currentElapsed;
                 
-                pauseTitle.innerText = isAutoFinish ? "恭喜達成目標！" : "訓練暫停中";
+                pauseTitle.innerText = isAutoFinish ? "🎉 恭喜達成訓練目標！" : "訓練暫停中";
                 document.getElementById('pause-score').innerText = score;
                 document.getElementById('pause-miss').innerText = misses;
                 document.getElementById('training-duration').innerText = formatTime(Math.floor(totalElapsedSeconds));
@@ -394,7 +482,7 @@
 
         function formatTime(s) {
             const mins = Math.floor(s / 60);
-            const secs = s % 60;
+            const secs = Math.floor(s % 60);
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
@@ -407,10 +495,10 @@
         });
 
         resetHistoryBtn.addEventListener('click', () => {
-            if(confirm("確定要清除所有訓練歷史紀錄嗎？")) {
-                history = [];
-                renderHistory();
-            }
+            history = [];
+            try { localStorage.removeItem('stroke_rehab_history'); } catch(e){}
+            renderHistory();
+            showToast("歷史紀錄已清空");
         });
 
         function resetSession() {
@@ -425,41 +513,45 @@
 
         function saveToHistory() {
             const total = score + misses;
-            if (total === 0 && totalElapsedSeconds < 1) return;
+            if (total === 0 && totalElapsedSeconds < 2) return;
 
-            let modeName = "計時碼表";
-            if(config.mode === 'targetCount') modeName = `數量目標(${config.targetCount})`;
-            if(config.mode === 'targetTime') modeName = `時間目標(${config.targetTimeMinutes}分)`;
-
-            const record = {
-                timestamp: new Date().toLocaleString(),
-                mode: modeName,
-                score: score,
-                misses: misses,
-                duration: formatTime(Math.floor(totalElapsedSeconds)),
-                accuracy: total === 0 ? 0 : Math.round((score / total) * 100)
-            };
+            const record = getCurrentSessionSnapshot();
             history.unshift(record);
+            try {
+                localStorage.setItem('stroke_rehab_history', JSON.stringify(history.slice(0, 50)));
+            } catch(e) {}
         }
 
         function renderHistory() {
             if (history.length === 0) {
-                historyContainer.innerHTML = '<p class="text-gray-400 text-center py-10 text-xs">尚無紀錄</p>';
+                historyContainer.innerHTML = '<p class="text-gray-400 text-center py-12 text-xs">尚無訓練紀錄</p>';
                 return;
             }
 
-            historyContainer.innerHTML = history.map((item) => `
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[9px] text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded">${item.mode}</span>
-                        <span class="text-[9px] text-gray-300 font-mono">${item.timestamp}</span>
+            historyContainer.innerHTML = history.map((item, index) => `
+                <div class="bg-gray-50/80 hover:bg-blue-50/50 transition p-3 rounded-2xl border border-gray-100 flex flex-col gap-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-[10px] text-blue-600 font-bold bg-blue-100/70 px-2 py-0.5 rounded-md">${item.mode}</span>
+                        <span class="text-[11px] text-gray-400 font-mono">${item.timestamp}</span>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <div class="flex gap-3 items-baseline">
-                            <span class="text-lg font-bold text-gray-700">${item.score} <small class="text-[10px] text-gray-400">接住</small></span>
-                            <span class="text-xs font-medium text-green-500">${item.accuracy}% 成功</span>
+                    <div class="flex justify-between items-end">
+                        <div class="flex items-baseline gap-3">
+                            <div>
+                                <span class="text-base font-black text-slate-800">${item.score}</span>
+                                <span class="text-[10px] text-gray-500">接住</span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-rose-500">${item.misses}</span>
+                                <span class="text-[10px] text-gray-400">漏球</span>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-600 ml-1">率 ${item.accuracy}%</span>
                         </div>
-                        <p class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded">${item.duration}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-mono text-slate-500 bg-white px-2 py-1 rounded-md border border-gray-200">${item.duration}</span>
+                            <button onclick="exportSingleReportCard(${index})" title="匯出此筆圖卡" class="p-1 text-gray-400 hover:text-blue-600 bg-white hover:bg-blue-50 rounded-lg border border-gray-200 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -475,18 +567,16 @@
             config.targetCount = parseInt(targetCountSlider.value);
             config.targetTimeMinutes = parseInt(targetTimeSlider.value);
 
-            // 更新標籤
             speedValLabel.innerText = config.fallDurationSeconds.toFixed(1) + " 秒";
             sizeValLabel.innerText = config.playerWidth + " px";
             freqValLabel.innerText = (config.spawnFrequency / 1000).toFixed(1) + " 秒";
             targetCountValLabel.innerText = config.targetCount + " 個";
             targetTimeValLabel.innerText = config.targetTimeMinutes + " 分鐘";
 
-            // 模式對應 UI 開關
             targetCountContainer.classList.toggle('hidden', config.mode !== 'targetCount');
             targetTimeContainer.classList.toggle('hidden', config.mode !== 'targetTime');
             
-            let modeName = "計時碼表";
+            let modeName = "碼表計時";
             if(config.mode === 'targetCount') modeName = `目標數量：${config.targetCount} 個`;
             if(config.mode === 'targetTime') modeName = `目標時間：${config.targetTimeMinutes} 分鐘`;
             modeIndicator.innerText = "目前模式：" + modeName;
@@ -502,8 +592,6 @@
             progressUI.classList.remove('hidden');
             if (config.mode === 'targetCount') {
                 progressText.innerText = `${score} / ${config.targetCount} 球`;
-            } else {
-                // 時間進度在遊戲迴圈更新
             }
         }
 
@@ -520,7 +608,7 @@
         function createTarget() {
             const sides = [0.2, 0.5, 0.8];
             const x = canvas.width * sides[Math.floor(Math.random() * sides.length)];
-            targets.push({ x: x, y: -30, radius: 18, color: '#3B82F6' });
+            targets.push({ x: x, y: -30, radius: 18 });
         }
 
         function drawPlayer() {
@@ -530,16 +618,23 @@
             if (mouseX > canvas.width - config.playerWidth / 2) mouseX = canvas.width - config.playerWidth / 2;
             const x = mouseX - config.playerWidth / 2;
 
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = 'rgba(59, 130, 246, 0.4)';
-            ctx.fillStyle = '#3B82F6';
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(59, 130, 246, 0.35)';
+            ctx.fillStyle = '#2563EB';
             ctx.beginPath();
             ctx.roundRect(x, playerY, config.playerWidth, playerHeight, 8);
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
-            ctx.setLineDash([10, 10]);
+            // 中心點指標
+            ctx.fillStyle = '#60A5FA';
+            ctx.beginPath();
+            ctx.arc(mouseX, playerY + playerHeight / 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 垂直準線
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+            ctx.setLineDash([8, 8]);
             ctx.beginPath();
             ctx.moveTo(mouseX, playerY);
             ctx.lineTo(mouseX, 0);
@@ -553,7 +648,7 @@
             ctx.lineWidth = 2;
             [0.2, 0.5, 0.8].forEach(p => {
                 ctx.beginPath();
-                ctx.setLineDash([2, 4]);
+                ctx.setLineDash([3, 5]);
                 ctx.moveTo(canvas.width * p, 0);
                 ctx.lineTo(canvas.width * p, canvas.height);
                 ctx.stroke();
@@ -564,12 +659,10 @@
         function gameLoop(timestamp) {
             if (!gameRunning || isPaused) return;
 
-            // 時間計算
             const currentSessionElapsed = (performance.now() - sessionStartTime) / 1000;
             const totalSec = totalElapsedSeconds + currentSessionElapsed;
             timerDisplay.innerText = formatTime(Math.floor(totalSec));
 
-            // 目標時間檢查
             if (config.mode === 'targetTime') {
                 const targetSec = config.targetTimeMinutes * 60;
                 progressText.innerText = `${formatTime(Math.floor(totalSec))} / ${formatTime(targetSec)}`;
@@ -593,20 +686,19 @@
 
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-                const gradient = ctx.createRadialGradient(t.x-5, t.y-5, 2, t.x, t.y, t.radius);
-                gradient.addColorStop(0, '#60a5fa');
+                const gradient = ctx.createRadialGradient(t.x - 4, t.y - 4, 2, t.x, t.y, t.radius);
+                gradient.addColorStop(0, '#93c5fd');
                 gradient.addColorStop(1, '#2563eb');
                 ctx.fillStyle = gradient;
                 ctx.fill();
 
                 const playerY = canvas.height - 40;
                 if (t.y + t.radius > playerY && t.y - t.radius < playerY + 16) {
-                    if (t.x > mouseX - config.playerWidth / 2 - 5 && t.x < mouseX + config.playerWidth / 2 + 5) {
+                    if (t.x > mouseX - config.playerWidth / 2 - 4 && t.x < mouseX + config.playerWidth / 2 + 4) {
                         score++;
                         targets.splice(i, 1);
                         updateStats();
                         
-                        // 目標數量檢查
                         if (config.mode === 'targetCount' && score >= config.targetCount) {
                             togglePause(true);
                             return;
@@ -625,6 +717,247 @@
             animationId = requestAnimationFrame(gameLoop);
         }
 
+        // ==========================================
+        // 匯出功能 1：CSV / Excel 匯出
+        // ==========================================
+        function exportHistoryToCSV() {
+            if (history.length === 0) {
+                showToast("目前尚無訓練紀錄可匯出！");
+                return;
+            }
+
+            const headers = ["日期時間", "訓練模式", "成功接住數", "漏掉次數", "總球數", "成功率(%)", "訓練時長(分:秒)", "訓練秒數", "球體下落速度(秒)", "收集器寬度(px)"];
+            
+            const rows = history.map(item => [
+                `"${item.timestamp}"`,
+                `"${item.mode}"`,
+                item.score,
+                item.misses,
+                item.total || (item.score + item.misses),
+                `${item.accuracy}%`,
+                `"${item.duration}"`,
+                item.durationSeconds || "",
+                item.fallDuration || config.fallDurationSeconds,
+                item.paddleWidth || config.playerWidth
+            ]);
+
+            // 加入 UTF-8 BOM (\uFEFF) 讓 Excel 直接雙擊開啟時正確識別 UTF-8 中文
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\r\n");
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `中風復健左右控制訓練紀錄_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast("✅ 已成功匯出 Excel (CSV) 試算表！");
+        }
+
+        // ==========================================
+        // 匯出功能 2：專屬成果圖卡生成 (Canvas 繪製 PNG)
+        // ==========================================
+        function generateReportCardImage(record) {
+            const cardCanvas = document.createElement('canvas');
+            const cWidth = 1000;
+            const cHeight = 650;
+            cardCanvas.width = cWidth;
+            cardCanvas.height = cHeight;
+            const c = cardCanvas.getContext('2d');
+
+            // 1. 底色與背景漸層
+            const bgGrad = c.createLinearGradient(0, 0, 0, cHeight);
+            bgGrad.addColorStop(0, '#F8FAFC');
+            bgGrad.addColorStop(1, '#EEF2F6');
+            c.fillStyle = bgGrad;
+            c.fillRect(0, 0, cWidth, cHeight);
+
+            // 頂部裝飾條
+            const headerGrad = c.createLinearGradient(0, 0, cWidth, 0);
+            headerGrad.addColorStop(0, '#2563EB');
+            headerGrad.addColorStop(1, '#4F46E5');
+            c.fillStyle = headerGrad;
+            c.fillRect(0, 0, cWidth, 14);
+
+            // 2. 主標題與日期
+            c.fillStyle = '#0F172A';
+            c.font = 'bold 34px "Microsoft JhengHei", sans-serif';
+            c.fillText('復健訓練成果分析報告', 50, 75);
+
+            c.fillStyle = '#64748B';
+            c.font = '500 18px "Microsoft JhengHei", sans-serif';
+            c.fillText('左右控制與神經動作協調訓練', 50, 110);
+
+            // 右上方產生日期
+            c.textAlign = 'right';
+            c.font = '500 16px monospace';
+            c.fillStyle = '#64748B';
+            c.fillText(`紀錄時間：${record.timestamp}`, cWidth - 50, 80);
+            c.fillStyle = '#2563EB';
+            c.font = 'bold 16px "Microsoft JhengHei", sans-serif';
+            c.fillText(`模式：${record.mode}`, cWidth - 50, 110);
+            c.textAlign = 'left';
+
+            // 分隔線
+            c.strokeStyle = '#E2E8F0';
+            c.lineWidth = 1.5;
+            c.beginPath();
+            c.moveTo(50, 135);
+            c.lineTo(cWidth - 50, 135);
+            c.stroke();
+
+            // 3. 左側：成功率圓形進度圖表 (Donut Chart)
+            const centerX = 230;
+            const centerY = 310;
+            const radius = 105;
+            const strokeWidth = 22;
+
+            // 背景環
+            c.beginPath();
+            c.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            c.lineWidth = strokeWidth;
+            c.strokeStyle = '#E2E8F0';
+            c.stroke();
+
+            // 成功率進度環
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (Math.PI * 2 * (record.accuracy / 100));
+            c.beginPath();
+            c.arc(centerX, centerY, radius, startAngle, endAngle);
+            c.lineWidth = strokeWidth;
+            c.strokeStyle = record.accuracy >= 80 ? '#10B981' : (record.accuracy >= 60 ? '#3B82F6' : '#F59E0B');
+            c.lineCap = 'round';
+            c.stroke();
+            c.lineCap = 'butt';
+
+            // 圓心中文字
+            c.textAlign = 'center';
+            c.fillStyle = '#0F172A';
+            c.font = 'bold 46px "Microsoft JhengHei", sans-serif';
+            c.fillText(`${record.accuracy}%`, centerX, centerY + 12);
+            c.font = '500 15px "Microsoft JhengHei", sans-serif';
+            c.fillStyle = '#64748B';
+            c.fillText('總體成功率', centerX, centerY + 42);
+
+            // 4. 右側：關鍵數據卡片 2x2 格
+            const stats = [
+                { label: '成功接住次數', val: `${record.score} 次`, color: '#059669', bg: '#ECFDF5', border: '#A7F3D0' },
+                { label: '漏球次數', val: `${record.misses} 次`, color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+                { label: '累積訓練時間', val: `${record.duration}`, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
+                { label: '訓練難易配置', val: `${record.fallDuration || config.fallDurationSeconds}s / ${record.paddleWidth || config.playerWidth}px`, color: '#4F46E5', bg: '#EEF2FF', border: '#C7D2FE' }
+            ];
+
+            const gridX = 420;
+            const gridY = 175;
+            const cardW = 250;
+            const cardH = 115;
+            const gapX = 30;
+            const gapY = 20;
+
+            stats.forEach((st, idx) => {
+                const col = idx % 2;
+                const row = Math.floor(idx / 2);
+                const x = gridX + col * (cardW + gapX);
+                const y = gridY + row * (cardH + gapY);
+
+                // 卡片底
+                c.fillStyle = st.bg;
+                c.strokeStyle = st.border;
+                c.lineWidth = 1.5;
+                c.beginPath();
+                c.roundRect(x, y, cardW, cardH, 14);
+                c.fill();
+                c.stroke();
+
+                // 標籤
+                c.textAlign = 'left';
+                c.fillStyle = '#475569';
+                c.font = 'bold 15px "Microsoft JhengHei", sans-serif';
+                c.fillText(st.label, x + 20, y + 36);
+
+                // 數值
+                c.fillStyle = st.color;
+                c.font = 'bold 30px "Microsoft JhengHei", monospace';
+                c.fillText(st.val, x + 20, y + 84);
+            });
+
+            // 5. 下方復健回饋評語與治療建議
+            const evalBoxY = 465;
+            const evalBoxW = cWidth - 100;
+            const evalBoxH = 125;
+
+            c.fillStyle = '#FFFFFF';
+            c.strokeStyle = '#E2E8F0';
+            c.lineWidth = 1;
+            c.beginPath();
+            c.roundRect(50, evalBoxY, evalBoxW, evalBoxH, 16);
+            c.fill();
+            c.stroke();
+
+            // 評語邏輯
+            let comment = "表現穩定！建議維持目前強度，循序漸進提高手眼協調敏捷度。";
+            let tag = "穩定進步中";
+            if (record.accuracy >= 90) {
+                tag = "極佳掌控度";
+                comment = "極為優異！左右橫向位移控制精確，可嘗試調快球體速度或縮小收集板以挑戰更高難度。";
+            } else if (record.accuracy < 60) {
+                tag = "需要多休息與調適";
+                comment = "初期訓練手部容易疲倦，建議放寬收集器寬度或降低速度，採短時間、多次數進行。";
+            }
+
+            c.fillStyle = '#1E293B';
+            c.font = 'bold 18px "Microsoft JhengHei", sans-serif';
+            c.fillText(`復健評估簡評：【${tag}】`, 75, evalBoxY + 42);
+
+            c.fillStyle = '#475569';
+            c.font = '400 16px "Microsoft JhengHei", sans-serif';
+            c.fillText(comment, 75, evalBoxY + 80);
+
+            // 底部官方備註
+            c.fillStyle = '#94A3B8';
+            c.font = '13px "Microsoft JhengHei", sans-serif';
+            c.fillText('※ 本報表僅供自我復健進度追蹤與職能治療評估參考。請依自身體力及醫師處方調整訓練強度。', 50, 620);
+
+            // 匯出圖檔
+            const imageURL = cardCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imageURL;
+            link.download = `復健成果報告_${record.timestamp.replace(/[/:\s]/g, '_')}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("🖼️ 成果圖卡下載成功！");
+        }
+
+        // 單獨從歷史清單匯出指定圖卡
+        window.exportSingleReportCard = function(index) {
+            if (history[index]) {
+                generateReportCardImage(history[index]);
+            }
+        };
+
+        // 事件監聽：匯出 CSV
+        exportExcelBtn.addEventListener('click', exportHistoryToCSV);
+
+        // 事件監聽：匯出最新一筆歷史圖卡
+        exportLatestCardBtn.addEventListener('click', () => {
+            if (history.length === 0) {
+                showToast("目前尚無訓練紀錄可供匯出！");
+                return;
+            }
+            generateReportCardImage(history[0]);
+        });
+
+        // 事件監聽：暫停/結算彈窗中直接匯出本次成果圖卡
+        exportCardModalBtn.addEventListener('click', () => {
+            const currentRecord = getCurrentSessionSnapshot();
+            generateReportCardImage(currentRecord);
+        });
+
+        // 初始化
         updateConfig();
         renderHistory();
     </script>
